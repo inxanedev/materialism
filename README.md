@@ -31,7 +31,7 @@ Materialism adds a per-world currency, a sell screen, and a category-based shop.
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/materialism-0.4.0-SNAPSHOT.jar`.
+The mod jar is written to `build/libs/materialism-0.4.0.jar`.
 
 ## Commands
 
@@ -65,4 +65,4 @@ The client settings file is `config/materialism-client.json`.
 
 ## Version
 
-Development version: **v0.4.0-SNAPSHOT**
+Current version: **v0.4.0**
