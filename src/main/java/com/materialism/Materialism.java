@@ -1,6 +1,7 @@
 package com.materialism;
 
 import com.materialism.command.BalanceCommand;
+import com.materialism.command.PayCommand;
 import com.materialism.command.SellCommand;
 import com.materialism.command.ShopCommand;
 import com.materialism.economy.EconomyManager;
@@ -24,6 +25,7 @@ public final class Materialism implements ModInitializer {
         ShopNetworking.init();
         SellCommand.register();
         BalanceCommand.register();
+        PayCommand.register();
         ShopCommand.register();
         LOGGER.info("Materialism loaded");
     }

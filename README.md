@@ -9,6 +9,7 @@ Materialism adds a per-world currency, a sell screen, and a category-based shop.
 - Sell items through `/sell`, a keybind, or the **Sell Items** button in the shop.
 - Buy items through `/shop` or `/buy`.
 - Check your balance with `/balance` or `/bal`.
+- Pay other players with `/pay <player> <amount>`.
 - Per-world JSON economy stored by player UUID.
 - Sell prices account for item durability.
 - Shop supports categories, search, paging, stack/custom quantities, and shulker-box packaging.
@@ -30,7 +31,7 @@ Materialism adds a per-world currency, a sell screen, and a category-based shop.
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/materialism-0.3.0.jar`.
+The mod jar is written to `build/libs/materialism-0.4.0-SNAPSHOT.jar`.
 
 ## Commands
 
@@ -39,6 +40,7 @@ The mod jar is written to `build/libs/materialism-0.3.0.jar`.
 | `/sell` | Open the selling screen |
 | `/shop`, `/buy` | Open the shop |
 | `/balance`, `/bal` | Show your balance |
+| `/pay <player> <amount>` | Pay another player |
 
 The sell and shop keybinds are unassigned by default.
 
@@ -59,4 +61,4 @@ The client settings file is `config/materialism-client.json`.
 
 ## Version
 
-Current version: **v0.3.0**
+Development version: **v0.4.0-SNAPSHOT**

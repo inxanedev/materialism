@@ -63,6 +63,23 @@ public final class EconomyStore {
         return true;
     }
 
+    public synchronized boolean transfer(UUID from, UUID to, long units) {
+        if (units <= 0L || from.equals(to)) {
+            return false;
+        }
+
+        String fromKey = from.toString();
+        long balance = this.balances.getOrDefault(fromKey, 0L);
+        if (balance < units) {
+            return false;
+        }
+
+        this.balances.put(fromKey, balance - units);
+        this.balances.merge(to.toString(), units, Long::sum);
+        this.save();
+        return true;
+    }
+
     private void load() {
         if (!Files.isRegularFile(this.file)) {
             return;
