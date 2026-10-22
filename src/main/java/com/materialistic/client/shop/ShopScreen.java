@@ -240,7 +240,7 @@ public final class ShopScreen extends Screen {
         this.addRenderableWidget(this.plusButton);
 
         this.presetButtons.put("one", new MaterialButton(
-                this.leftPos + DETAIL_INNER_X,
+                this.leftPos + DETAIL_INNER_X + 2,
                 this.topPos + 112,
                 32,
                 16,
@@ -249,7 +249,7 @@ public final class ShopScreen extends Screen {
                 () -> this.setQuantity(1, false)
         ));
         this.presetButtons.put("stack", new MaterialButton(
-                this.leftPos + DETAIL_INNER_X + 36,
+                this.leftPos + DETAIL_INNER_X + 38,
                 this.topPos + 112,
                 32,
                 16,
@@ -263,7 +263,7 @@ public final class ShopScreen extends Screen {
                 }
         ));
         this.presetButtons.put("shulker", new MaterialButton(
-                this.leftPos + DETAIL_INNER_X + 72,
+                this.leftPos + DETAIL_INNER_X + 74,
                 this.topPos + 112,
                 32,
                 16,
@@ -281,7 +281,7 @@ public final class ShopScreen extends Screen {
         }
 
         this.looseButton = new MaterialButton(
-                this.leftPos + DETAIL_INNER_X,
+                this.leftPos + DETAIL_INNER_X + 2,
                 this.topPos + 138,
                 50,
                 16,
@@ -290,7 +290,7 @@ public final class ShopScreen extends Screen {
                 () -> this.setBoxed(false)
         );
         this.boxedButton = new MaterialButton(
-                this.leftPos + DETAIL_INNER_X + 54,
+                this.leftPos + DETAIL_INNER_X + 56,
                 this.topPos + 138,
                 50,
                 16,
@@ -313,7 +313,7 @@ public final class ShopScreen extends Screen {
         this.addRenderableWidget(this.buyButton);
 
         this.sellButton = new MaterialButton(
-                this.leftPos + 190,
+                this.leftPos + 8,
                 this.topPos + 7,
                 70,
                 18,
@@ -719,26 +719,22 @@ public final class ShopScreen extends Screen {
     private void drawHeader(GuiGraphicsExtractor graphics) {
         int x = this.leftPos;
         int y = this.topPos;
-        graphics.text(this.font, this.title, x + 10, y + 7, UiTheme.TEXT, true);
-        graphics.fill(x + 10, y + 17, x + 30, y + 19, UiTheme.ACCENT);
-        graphics.text(
+        int center = x + IMAGE_WIDTH / 2;
+        graphics.centeredText(this.font, this.title, center, y + 7, UiTheme.TEXT);
+        graphics.fill(center - 14, y + 17, center + 14, y + 19, UiTheme.ACCENT);
+        graphics.centeredText(
                 this.font,
                 Component.translatable("materialistic.shop.subtitle"),
-                x + 10,
+                center,
                 y + 21,
-                UiTheme.MUTED,
-                false
+                UiTheme.MUTED
         );
 
-        graphics.item(new ItemStack(Items.GOLD_INGOT), x + 274, y + 9);
-        graphics.text(
-                this.font,
-                Component.translatable("materialistic.shop.balance", Money.currency(this.snapshot.balance)),
-                x + 292,
-                y + 12,
-                UiTheme.ACCENT,
-                false
-        );
+        Component balance = Component.literal(Money.currency(this.snapshot.balance));
+        int balanceWidth = 18 + this.font.width(balance);
+        int balanceX = x + 266 + (126 - balanceWidth) / 2;
+        graphics.item(new ItemStack(Items.GOLD_INGOT), balanceX, y + 9);
+        graphics.text(this.font, balance, balanceX + 18, y + 12, UiTheme.ACCENT, false);
     }
 
     private void drawGrid(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -831,12 +827,10 @@ public final class ShopScreen extends Screen {
             graphics.text(this.font, nameLines.get(i), x + 22, y + 44 + i * 10, UiTheme.TEXT, false);
         }
 
-        graphics.text(this.font, Component.translatable("materialistic.shop.price_label"), x, y + 64, UiTheme.DIM, false);
-        UiDraw.rightText(
-                graphics,
+        graphics.centeredText(
                 this.font,
-                Component.literal(Money.currency(offer.entry.price)),
-                this.leftPos + DETAIL_INNER_RIGHT,
+                Component.translatable("materialistic.shop.price", Money.currency(offer.entry.price)),
+                this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
                 y + 64,
                 UiTheme.ACCENT
         );
@@ -851,13 +845,12 @@ public final class ShopScreen extends Screen {
         );
 
         if (isPackable(offer.stack)) {
-            graphics.text(
+            graphics.centeredText(
                     this.font,
                     Component.translatable("materialistic.shop.delivery"),
-                    x,
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
                     y + 132,
-                    UiTheme.DIM,
-                    false
+                    UiTheme.DIM
             );
         }
 
@@ -885,12 +878,10 @@ public final class ShopScreen extends Screen {
             );
         }
 
-        graphics.text(this.font, Component.translatable("materialistic.shop.total_label"), x, y + 166, UiTheme.DIM, false);
-        UiDraw.rightText(
-                graphics,
+        graphics.centeredText(
                 this.font,
-                Component.literal(Money.currency(this.total(offer))),
-                this.leftPos + DETAIL_INNER_RIGHT,
+                Component.translatable("materialistic.shop.total", Money.currency(this.total(offer))),
+                this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
                 y + 166,
                 UiTheme.ACCENT
         );

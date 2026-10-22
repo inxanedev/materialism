@@ -20,18 +20,7 @@ public final class UiDraw {
         if (width <= 0 || height <= 0) {
             return;
         }
-
-        int r = Math.max(0, Math.min(radius, Math.min(width / 2, height / 2)));
-        if (r == 0) {
-            graphics.fill(x, y, x + width, y + height, color);
-            return;
-        }
-
-        for (int row = 0; row < height; row++) {
-            int distance = row < r ? r - row : row >= height - r ? row - (height - r - 1) : 0;
-            int inset = distance == 0 ? 0 : (int) Math.ceil(r - Math.sqrt((double) r * r - (double) (r - distance) * (r - distance)));
-            graphics.fill(x + inset, y + row, x + width - inset, y + row + 1, color);
-        }
+        graphics.fill(x, y, x + width, y + height, color);
     }
 
     public static void panel(

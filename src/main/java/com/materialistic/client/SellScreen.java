@@ -20,7 +20,7 @@ import java.util.List;
 
 public final class SellScreen extends AbstractContainerScreen<SellMenu> {
     private static final int PANEL_WIDTH = 304;
-    private static final int PANEL_HEIGHT = 228;
+    private static final int PANEL_HEIGHT = 232;
     private static final int SIDEBAR_X = 194;
     private static final int SIDEBAR_TEXT_X = 202;
     private static final int SIDEBAR_INNER_WIDTH = 88;
@@ -37,7 +37,7 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
         this.titleLabelX = 12;
         this.titleLabelY = 7;
         this.inventoryLabelX = 12;
-        this.inventoryLabelY = 138;
+        this.inventoryLabelY = 144;
     }
 
     @Override
@@ -89,8 +89,8 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
         super.extractBackground(graphics, mouseX, mouseY, delta);
         graphics.fill(0, 0, this.width, this.height, UiTheme.OVERLAY);
         UiDraw.panel(graphics, this.leftPos, this.topPos, PANEL_WIDTH, PANEL_HEIGHT, 10);
-        UiDraw.card(graphics, this.leftPos + 6, this.topPos + 6, 182, 216, 8);
-        UiDraw.card(graphics, this.leftPos + SIDEBAR_X, this.topPos + 6, 104, 216, 8);
+        UiDraw.card(graphics, this.leftPos + 6, this.topPos + 6, 182, 220, 8);
+        UiDraw.card(graphics, this.leftPos + SIDEBAR_X, this.topPos + 6, 104, 220, 8);
     }
 
     @Override
@@ -122,23 +122,22 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, UiTheme.TEXT, true);
-        graphics.fill(this.titleLabelX, 18, this.titleLabelX + 30, 20, UiTheme.ACCENT);
-        graphics.text(
+        int leftCenter = 6 + 182 / 2;
+        graphics.centeredText(this.font, this.title, leftCenter, this.titleLabelY, UiTheme.TEXT);
+        graphics.fill(leftCenter - 15, 18, leftCenter + 15, 20, UiTheme.ACCENT);
+        graphics.centeredText(
                 this.font,
                 Component.translatable("materialistic.screen.subtitle"),
-                this.titleLabelX,
+                leftCenter,
                 21,
-                UiTheme.MUTED,
-                false
+                UiTheme.MUTED
         );
-        graphics.text(
+        graphics.centeredText(
                 this.font,
                 this.playerInventoryTitle,
-                this.inventoryLabelX,
+                leftCenter,
                 this.inventoryLabelY,
-                UiTheme.MUTED,
-                false
+                UiTheme.MUTED
         );
     }
 
@@ -150,29 +149,27 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
         int x = this.leftPos + SIDEBAR_TEXT_X;
         int y = this.topPos;
 
-        graphics.text(
+        int sidebarCenter = this.leftPos + SIDEBAR_X + 52;
+        graphics.centeredText(
                 this.font,
                 Component.translatable("materialistic.screen.summary"),
-                x,
+                sidebarCenter,
                 y + 18,
-                UiTheme.TEXT,
-                false
+                UiTheme.TEXT
         );
-        graphics.text(
+        graphics.centeredText(
                 this.font,
                 Component.translatable("materialistic.screen.items", summary.itemCount()),
-                x,
+                sidebarCenter,
                 y + 38,
-                UiTheme.MUTED,
-                false
+                UiTheme.MUTED
         );
-        graphics.text(
+        graphics.centeredText(
                 this.font,
                 Component.translatable("materialistic.screen.total", Money.currency(summary.units())),
-                x,
+                sidebarCenter,
                 y + 54,
-                UiTheme.ACCENT,
-                false
+                UiTheme.ACCENT
         );
         UiDraw.divider(graphics, x, y + 74, SIDEBAR_INNER_WIDTH);
 
@@ -181,7 +178,7 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
                     this.leftPos + 6,
                     this.topPos + 6,
                     this.leftPos + 188,
-                    this.topPos + 222,
+                    this.topPos + 226,
                     0xAA000000
             );
             UiDraw.card(graphics, this.leftPos + 20, this.topPos + 72, 154, 72, 8);
