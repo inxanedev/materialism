@@ -30,7 +30,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/materialistic-0.2.1-SNAPSHOT.jar`.
+The mod jar is written to `build/libs/materialistic-0.2.1.jar`.
 
 ## Commands
 
@@ -59,4 +59,4 @@ The client settings file is `config/materialistic-client.json`.
 
 ## Version
 
-Development version: **v0.2.1**
+Current version: **v0.2.1**
