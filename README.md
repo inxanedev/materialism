@@ -13,6 +13,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 - Sell prices account for item durability.
 - Shop supports categories, search, paging, stack/custom quantities, and shulker-box packaging.
 - Optional ModMenu configuration screen.
+- Controller-friendly shop navigation: every item slot and control is focusable, compatible with Controlify.
 
 ## Requirements
 
@@ -21,6 +22,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 - Fabric API 0.161.0+26.2
 - Java 25
 - ModMenu 20.0.3 or newer (optional)
+- Controlify 3.5.3 or newer (optional, for controller navigation)
 
 ## Build
 
@@ -28,7 +30,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/materialistic-0.2.0.jar`.
+The mod jar is written to `build/libs/materialistic-0.2.1-SNAPSHOT.jar`.
 
 ## Commands
 
@@ -57,4 +59,4 @@ The client settings file is `config/materialistic-client.json`.
 
 ## Version
 
-Current version: **v0.2**
+Development version: **v0.2.1**

@@ -1,5 +1,6 @@
 package com.materialistic.client.shop;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.materialistic.Money;
 import com.materialistic.client.ui.MaterialButton;
 import com.materialistic.client.ui.UiDraw;
@@ -16,7 +17,9 @@ import java.util.Locale;
 import java.util.Map;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -69,6 +72,7 @@ public final class ShopScreen extends Screen {
     private final List<Offer> filtered = new ArrayList<>();
     private final Map<String, MaterialButton> categoryButtons = new HashMap<>();
     private final Map<String, MaterialButton> presetButtons = new HashMap<>();
+    private final List<ShopSlotWidget> slotWidgets = new ArrayList<>();
 
     private int leftPos;
     private int topPos;
@@ -103,6 +107,9 @@ public final class ShopScreen extends Screen {
 
     @Override
     protected void init() {
+        this.clearWidgets();
+        this.categoryButtons.clear();
+        this.presetButtons.clear();
         this.leftPos = (this.width - IMAGE_WIDTH) / 2;
         this.topPos = (this.height - IMAGE_HEIGHT) / 2;
 
@@ -124,6 +131,13 @@ public final class ShopScreen extends Screen {
             }
 
             this.offers.add(new Offer(entry, stack, stack.getHoverName().getString()));
+        }
+
+        this.slotWidgets.clear();
+        for (int i = 0; i < GRID_SIZE; i++) {
+            ShopSlotWidget slot = new ShopSlotWidget();
+            this.slotWidgets.add(slot);
+            this.addRenderableWidget(slot);
         }
 
         this.searchBox = new EditBox(
@@ -402,6 +416,7 @@ public final class ShopScreen extends Screen {
 
         this.previousPage.active = this.page > 0;
         this.nextPage.active = this.page + 1 < this.pageCount();
+        this.updateSlotWidgets();
 
         long total = hasItem ? this.total(offer) : 0L;
         boolean affordable = hasItem && total <= this.snapshot.balance;
@@ -738,27 +753,6 @@ public final class ShopScreen extends Screen {
     }
 
     private void drawGrid(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        int start = this.page * GRID_SIZE;
-        int end = Math.min(start + GRID_SIZE, this.filtered.size());
-        int hovered = this.gridIndexAt(mouseX, mouseY);
-
-        for (int index = start; index < end; index++) {
-            int local = index - start;
-            int column = local % GRID_COLUMNS;
-            int row = local / GRID_COLUMNS;
-            int x = this.leftPos + GRID_X + column * CELL;
-            int y = this.topPos + GRID_Y + row * CELL;
-            Offer offer = this.filtered.get(index);
-
-            boolean selected = offer.entry.id.equals(this.selectedId);
-            int fill = selected ? UiTheme.ACCENT_SOFT : hovered == index ? UiTheme.CARD_HOVER : UiTheme.CARD;
-            int border = selected ? UiTheme.ACCENT : hovered == index ? UiTheme.BORDER : UiTheme.BORDER_SOFT;
-            UiDraw.roundedRect(graphics, x + 1, y + 1, 18, 18, 4, border);
-            UiDraw.roundedRect(graphics, x + 2, y + 2, 16, 16, 3, fill);
-            graphics.item(offer.stack, x + 2, y + 2);
-            graphics.itemDecorations(this.font, offer.stack, x + 2, y + 2);
-        }
-
         if (this.filtered.isEmpty()) {
             graphics.centeredText(
                     this.font,
@@ -1035,6 +1029,113 @@ public final class ShopScreen extends Screen {
         }
 
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    private void updateSlotWidgets() {
+        int start = this.page * GRID_SIZE;
+        for (int local = 0; local < this.slotWidgets.size(); local++) {
+            ShopSlotWidget widget = this.slotWidgets.get(local);
+            int column = local % GRID_COLUMNS;
+            int row = local / GRID_COLUMNS;
+            widget.setX(this.leftPos + GRID_X + column * CELL + 1);
+            widget.setY(this.topPos + GRID_Y + row * CELL + 1);
+
+            int index = start + local;
+            Offer offer = index < this.filtered.size() ? this.filtered.get(index) : null;
+            widget.setOffer(offer);
+        }
+    }
+
+    private void selectOffer(Offer offer) {
+        if (offer == null || offer.entry.id.equals(this.selectedId)) {
+            return;
+        }
+
+        this.selectedId = offer.entry.id;
+        this.quantity = 1;
+        this.boxed = false;
+        this.manualDelivery = false;
+        this.buyArmed = false;
+        this.statusText = "";
+        this.updateControls();
+    }
+
+    private final class ShopSlotWidget extends AbstractWidget {
+        private Offer offer;
+
+        private ShopSlotWidget() {
+            super(0, 0, 18, 18, Component.empty());
+        }
+
+        private void setOffer(Offer offer) {
+            this.offer = offer;
+            this.visible = offer != null;
+            this.active = offer != null;
+            this.setMessage(offer == null ? Component.empty() : offer.stack.getHoverName());
+            if (offer == null && this.isFocused()) {
+                this.setFocused(false);
+            }
+        }
+
+        @Override
+        protected void extractWidgetRenderState(
+                GuiGraphicsExtractor graphics,
+                int mouseX,
+                int mouseY,
+                float delta
+        ) {
+            if (this.offer == null) {
+                return;
+            }
+
+            boolean selected = this.offer.entry.id.equals(ShopScreen.this.selectedId);
+            boolean focused = this.isFocused();
+            boolean hovered = this.isHovered();
+            if (focused) {
+                UiDraw.roundedRect(graphics, this.getX() - 1, this.getY() - 1, 20, 20, 5, UiTheme.ACCENT_HOVER);
+            }
+
+            int fill = selected ? UiTheme.ACCENT_SOFT : hovered ? UiTheme.CARD_HOVER : UiTheme.CARD;
+            int border = selected ? UiTheme.ACCENT : hovered || focused ? UiTheme.ACCENT_HOVER : UiTheme.BORDER_SOFT;
+            UiDraw.roundedRect(graphics, this.getX(), this.getY(), 18, 18, 4, border);
+            UiDraw.roundedRect(graphics, this.getX() + 1, this.getY() + 1, 16, 16, 3, fill);
+            graphics.item(this.offer.stack, this.getX() + 1, this.getY() + 1);
+            graphics.itemDecorations(ShopScreen.this.font, this.offer.stack, this.getX() + 1, this.getY() + 1);
+        }
+
+        @Override
+        public void onClick(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+            if (this.active && this.visible && this.offer != null) {
+                this.playDownSound(ShopScreen.this.minecraft.getSoundManager());
+                ShopScreen.this.selectOffer(this.offer);
+            }
+        }
+
+        @Override
+        public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+            if (this.active && this.visible
+                    && (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_SPACE)
+                    && this.offer != null) {
+                this.playDownSound(ShopScreen.this.minecraft.getSoundManager());
+                ShopScreen.this.selectOffer(this.offer);
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            super.setFocused(focused);
+            if (focused && this.active && this.visible && this.offer != null) {
+                ShopScreen.this.selectOffer(this.offer);
+            }
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput output) {
+            this.defaultButtonNarrationText(output);
+        }
     }
 
     private record Offer(ShopEntry entry, ItemStack stack, String name) {
