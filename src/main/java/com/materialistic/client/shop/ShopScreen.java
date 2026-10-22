@@ -1,6 +1,5 @@
 package com.materialistic.client.shop;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.materialistic.Money;
 import com.materialistic.client.ui.MaterialButton;
 import com.materialistic.client.ui.UiDraw;
@@ -1113,23 +1112,13 @@ public final class ShopScreen extends Screen {
 
         @Override
         public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-            if (this.active && this.visible
-                    && (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_SPACE)
-                    && this.offer != null) {
+            if (this.active && this.visible && event.isSelection() && this.offer != null) {
                 this.playDownSound(ShopScreen.this.minecraft.getSoundManager());
                 ShopScreen.this.selectOffer(this.offer);
                 return true;
             }
 
             return false;
-        }
-
-        @Override
-        public void setFocused(boolean focused) {
-            super.setFocused(focused);
-            if (focused && this.active && this.visible && this.offer != null) {
-                ShopScreen.this.selectOffer(this.offer);
-            }
         }
 
         @Override
