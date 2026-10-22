@@ -1,0 +1,9 @@
+pluginManagement {
+    repositories {
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        maven { name = 'Terraformers'; url = 'https://maven.terraformersmc.com/releases/' }
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'materialistic'

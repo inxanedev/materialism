@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "materialistic",
+  "version": "${version}",
+  "name": "Materialistic",
+  "description": "A per-world item economy with a clean selling screen.",
+  "authors": [
+    "Materialistic"
+  ],
+  "contact": {
+    "homepage": "https://example.invalid/materialistic",
+    "sources": "https://example.invalid/materialistic"
+  },
+  "license": "MIT",
+  "icon": "assets/materialistic/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.materialistic.Materialistic"
+    ],
+    "client": [
+      "com.materialistic.client.MaterialisticClient"
+    ],
+    "modmenu": [
+      "com.materialistic.client.MaterialisticModMenu"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": ">=20.0.3"
+  }
+}
