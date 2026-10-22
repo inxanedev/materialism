@@ -80,5 +80,6 @@
   "materialistic.shop.price_label": "Price",
   "materialistic.screen.subtitle": "Add items to the slots",
   "materialistic.screen.items": "%s items",
-  "materialistic.screen.ready": "Ready to sell"
+  "materialistic.screen.ready": "Ready to sell",
+  "key.materialistic.shop": "Open shop screen"
 }

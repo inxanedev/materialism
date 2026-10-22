@@ -16,6 +16,7 @@ public final class MaterialisticClient implements ClientModInitializer {
             Identifier.fromNamespaceAndPath(Materialistic.MOD_ID, "main")
     );
     private static KeyMapping sellKey;
+    private static KeyMapping shopKey;
 
     @Override
     public void onInitializeClient() {
@@ -30,11 +31,22 @@ public final class MaterialisticClient implements ClientModInitializer {
                 InputConstants.UNKNOWN.getValue(),
                 CATEGORY
         ));
+        shopKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.materialistic.shop",
+                InputConstants.Type.KEYSYM,
+                InputConstants.UNKNOWN.getValue(),
+                CATEGORY
+        ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (sellKey.consumeClick()) {
                 if (client.player != null && client.getConnection() != null) {
                     client.getConnection().sendCommand("sell");
+                }
+            }
+            while (shopKey.consumeClick()) {
+                if (client.player != null && client.getConnection() != null) {
+                    client.getConnection().sendCommand("shop");
                 }
             }
         });

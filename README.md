@@ -28,7 +28,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/materialistic-0.1.0.jar`.
+The mod jar is written to `build/libs/materialistic-0.2.0.jar`.
 
 ## Commands
 
@@ -38,7 +38,7 @@ The mod jar is written to `build/libs/materialistic-0.1.0.jar`.
 | `/shop`, `/buy` | Open the shop |
 | `/balance`, `/bal` | Show your balance |
 
-The sell keybind is unassigned by default.
+The sell and shop keybinds are unassigned by default.
 
 ## Configuration
 
@@ -57,4 +57,4 @@ The client settings file is `config/materialistic-client.json`.
 
 ## Version
 
-Current development version: **v0.2**
+Current version: **v0.2**
