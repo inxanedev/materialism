@@ -3,13 +3,13 @@
   "id": "materialistic",
   "version": "${version}",
   "name": "Materialistic",
-  "description": "A per-world item economy with a clean selling screen.",
+  "description": "A dark-fantasy item economy with a custom shop and selling interface.",
   "authors": [
     "Materialistic"
   ],
   "contact": {
-    "homepage": "https://example.invalid/materialistic",
-    "sources": "https://example.invalid/materialistic"
+    "homepage": "https://github.com/inxanedev/materialistic",
+    "sources": "https://github.com/inxanedev/materialistic"
   },
   "license": "MIT",
   "icon": "assets/materialistic/icon.png",
