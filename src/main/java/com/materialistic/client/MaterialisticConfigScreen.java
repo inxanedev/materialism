@@ -1,11 +1,19 @@
 package com.materialistic.client;
 
+import com.materialistic.client.ui.MaterialButton;
+import com.materialistic.client.ui.UiDraw;
+import com.materialistic.client.ui.UiTheme;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+
+import java.util.List;
 
 public final class MaterialisticConfigScreen extends Screen {
+    private static final int PANEL_WIDTH = 300;
+    private static final int PANEL_HEIGHT = 164;
+
     private final Screen parent;
 
     public MaterialisticConfigScreen(Screen parent) {
@@ -15,29 +23,69 @@ public final class MaterialisticConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        Button confirm = Button.builder(confirmLabel(), button -> {
-            MaterialisticConfig.setConfirmBeforeSelling(!MaterialisticConfig.confirmBeforeSelling());
-            button.setMessage(confirmLabel());
-        }).bounds(this.width / 2 - 100, this.height / 2 - 10, 200, 20).build();
+        int left = (this.width - PANEL_WIDTH) / 2;
+        int top = (this.height - PANEL_HEIGHT) / 2;
+
+        MaterialButton confirm = new MaterialButton(
+                left + 50,
+                top + 76,
+                200,
+                24,
+                confirmLabel(),
+                MaterialButton.Style.SEGMENT,
+                () -> {
+                    MaterialisticConfig.setConfirmBeforeSelling(!MaterialisticConfig.confirmBeforeSelling());
+                    this.rebuildWidgets();
+                }
+        );
+        confirm.setSelected(MaterialisticConfig.confirmBeforeSelling());
+
+        MaterialButton done = new MaterialButton(
+                left + 50,
+                top + 112,
+                200,
+                24,
+                Component.translatable("materialistic.config.done"),
+                MaterialButton.Style.PRIMARY,
+                () -> this.minecraft.gui.setScreen(this.parent)
+        );
 
         this.addRenderableWidget(confirm);
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("materialistic.config.done"),
-                button -> this.minecraft.gui.setScreen(this.parent)
-        ).bounds(this.width / 2 - 100, this.height / 2 + 20, 200, 20).build());
+        this.addRenderableWidget(done);
+    }
+
+    @Override
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractBackground(graphics, mouseX, mouseY, delta);
+        graphics.fill(0, 0, this.width, this.height, UiTheme.OVERLAY);
+        int left = (this.width - PANEL_WIDTH) / 2;
+        int top = (this.height - PANEL_HEIGHT) / 2;
+        UiDraw.panel(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT, 10);
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
-        graphics.centeredText(this.font, this.title, this.width / 2, 40, 0xFFFFFFFF);
-        graphics.centeredText(
-                this.font,
+        int left = (this.width - PANEL_WIDTH) / 2;
+        int top = (this.height - PANEL_HEIGHT) / 2;
+
+        graphics.centeredText(this.font, this.title, left + PANEL_WIDTH / 2, top + 18, UiTheme.TEXT);
+        graphics.fill(left + 138, top + 34, left + 162, top + 36, UiTheme.ACCENT);
+
+        List<FormattedCharSequence> description = this.font.split(
                 Component.translatable("materialistic.config.confirm.tooltip"),
-                this.width / 2,
-                this.height / 2 - 34,
-                0xFFB8B8B8
+                PANEL_WIDTH - 40
         );
+        for (int index = 0; index < Math.min(2, description.size()); index++) {
+            graphics.centeredText(
+                    this.font,
+                    description.get(index),
+                    left + PANEL_WIDTH / 2,
+                    top + 46 + index * 12,
+                    UiTheme.MUTED
+            );
+        }
+
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
     @Override

@@ -1,6 +1,6 @@
 # Materialistic
 
-A Fabric economy and shop mod for Minecraft **26.2**.
+A dark-fantasy Fabric economy and shop mod for Minecraft **26.2**.
 
 Materialistic adds a per-world currency, a sell screen, and a category-based shop.
 
@@ -57,4 +57,4 @@ The client settings file is `config/materialistic-client.json`.
 
 ## Version
 
-Current version: **v0.1**
+Current development version: **v0.2**

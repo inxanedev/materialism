@@ -33,11 +33,11 @@ public final class SellMenu extends AbstractContainerMenu {
         for (int row = 0; row < 6; row++) {
             for (int column = 0; column < 9; column++) {
                 int index = column + row * 9;
-                this.addSlot(new SellSlot(this.container, index, 8 + column * 18, 18 + row * 18));
+                this.addSlot(new SellSlot(this.container, index, 8 + column * 18, 28 + row * 18));
             }
         }
 
-        this.addStandardInventorySlots(inventory, 8, 140);
+        this.addStandardInventorySlots(inventory, 8, 148);
     }
 
     public Summary summary() {

@@ -1,6 +1,9 @@
 package com.materialistic.client.shop;
 
 import com.materialistic.Money;
+import com.materialistic.client.ui.MaterialButton;
+import com.materialistic.client.ui.UiDraw;
+import com.materialistic.client.ui.UiTheme;
 import com.materialistic.network.BuyItemPayload;
 import com.materialistic.network.PurchaseResultPayload;
 import com.materialistic.shop.ShopCategory;
@@ -13,10 +16,8 @@ import java.util.Locale;
 import java.util.Map;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -28,25 +29,46 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 public final class ShopScreen extends Screen {
-    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(
-            "materialistic",
-            "textures/gui/shop.png"
-    );
-    private static final int IMAGE_WIDTH = 424;
-    private static final int IMAGE_HEIGHT = 222;
-    private static final int GRID_X = 92;
-    private static final int GRID_Y = 30;
+    private static final int IMAGE_WIDTH = 400;
+    private static final int IMAGE_HEIGHT = 224;
+
+    private static final int LEFT_X = 8;
+    private static final int LEFT_WIDTH = 62;
+    private static final int CENTER_X = 76;
+    private static final int CENTER_WIDTH = 182;
+    private static final int RIGHT_X = 264;
+    private static final int RIGHT_WIDTH = 128;
+    private static final int CONTENT_Y = 34;
+
+    private static final int BROWSE_X = 72;
+    private static final int BROWSE_Y = 56;
+    private static final int BROWSE_WIDTH = 190;
+    private static final int BROWSE_HEIGHT = 160;
+    private static final int GRID_X = 77;
+    private static final int GRID_Y = 64;
+    private static final int CELL = 20;
     private static final int GRID_COLUMNS = 9;
     private static final int GRID_ROWS = 6;
     private static final int GRID_SIZE = GRID_COLUMNS * GRID_ROWS;
-    private static final int DETAIL_X = 264;
-    private static final int CATEGORY_WIDTH = 80;
+    private static final int PAGE_Y = 188;
+
+    private static final int SEARCH_X = 76;
+    private static final int SEARCH_Y = CONTENT_Y;
+    private static final int SEARCH_WIDTH = 182;
+    private static final int SEARCH_HEIGHT = 16;
+
+    private static final int DETAIL_INNER_X = RIGHT_X + 10;
+    private static final int DETAIL_INNER_RIGHT = RIGHT_X + RIGHT_WIDTH - 10;
+    private static final int QUANTITY_X = 282;
+    private static final int QUANTITY_FIELD_X = 304;
+    private static final int QUANTITY_FIELD_WIDTH = 48;
+    private static final int QUANTITY_PLUS_X = 356;
 
     private final ShopSnapshot snapshot;
     private final List<Offer> offers = new ArrayList<>();
     private final List<Offer> filtered = new ArrayList<>();
-    private final Map<String, Button> categoryButtons = new HashMap<>();
-    private final Map<String, Button> presetButtons = new HashMap<>();
+    private final Map<String, MaterialButton> categoryButtons = new HashMap<>();
+    private final Map<String, MaterialButton> presetButtons = new HashMap<>();
 
     private int leftPos;
     private int topPos;
@@ -61,18 +83,18 @@ public final class ShopScreen extends Screen {
     private boolean buyArmed;
     private boolean purchasePending;
     private String statusText = "";
-    private int statusColor = 0xFFD8D8D8;
+    private int statusColor = UiTheme.MUTED;
 
     private EditBox searchBox;
     private EditBox quantityBox;
-    private Button previousPage;
-    private Button nextPage;
-    private Button minusButton;
-    private Button plusButton;
-    private Button looseButton;
-    private Button boxedButton;
-    private Button buyButton;
-    private Button sellButton;
+    private MaterialButton previousPage;
+    private MaterialButton nextPage;
+    private MaterialButton minusButton;
+    private MaterialButton plusButton;
+    private MaterialButton looseButton;
+    private MaterialButton boxedButton;
+    private MaterialButton buyButton;
+    private MaterialButton sellButton;
 
     public ShopScreen(ShopSnapshot snapshot) {
         super(Component.translatable("materialistic.shop.title"));
@@ -84,6 +106,7 @@ public final class ShopScreen extends Screen {
         this.leftPos = (this.width - IMAGE_WIDTH) / 2;
         this.topPos = (this.height - IMAGE_HEIGHT) / 2;
 
+        this.offers.clear();
         for (ShopEntry entry : this.snapshot.entries) {
             Identifier id = Identifier.tryParse(entry.id);
             if (id == null) {
@@ -105,12 +128,15 @@ public final class ShopScreen extends Screen {
 
         this.searchBox = new EditBox(
                 this.font,
-                this.leftPos + GRID_X,
-                this.topPos + 6,
-                162,
-                18,
+                this.leftPos + SEARCH_X + 8,
+                this.topPos + SEARCH_Y,
+                SEARCH_WIDTH - 16,
+                SEARCH_HEIGHT,
                 Component.translatable("materialistic.shop.search")
         );
+        this.searchBox.setBordered(false);
+        this.searchBox.setTextColor(UiTheme.TEXT);
+        this.searchBox.setTextColorUneditable(UiTheme.DIM);
         this.searchBox.setHint(Component.translatable("materialistic.shop.search"));
         this.searchBox.setResponder(value -> {
             this.search = value == null ? "" : value.toLowerCase(Locale.ROOT);
@@ -120,93 +146,181 @@ public final class ShopScreen extends Screen {
         });
         this.addRenderableWidget(this.searchBox);
 
-        int categoryY = this.topPos + 30;
+        int categoryY = this.topPos + CONTENT_Y;
         for (ShopCategory category : this.snapshot.categories) {
-            Button button = Button.builder(Component.translatable(category.title), pressed -> {
-                this.selectedCategory = category.id;
-                this.page = 0;
-                this.buyArmed = false;
-                this.applyFilter();
-            }).bounds(this.leftPos + 6, categoryY, CATEGORY_WIDTH, 16).build();
-            categoryY += 17;
+            MaterialButton button = new MaterialButton(
+                    this.leftPos + LEFT_X,
+                    categoryY,
+                    LEFT_WIDTH,
+                    15,
+                    Component.translatable(category.title),
+                    MaterialButton.Style.NAV,
+                    () -> {
+                        this.selectedCategory = category.id;
+                        this.page = 0;
+                        this.buyArmed = false;
+                        this.applyFilter();
+                    }
+            );
+            button.setLeftAligned(true);
+            categoryY += 15;
             this.categoryButtons.put(category.id, button);
             this.addRenderableWidget(button);
         }
 
-        this.previousPage = Button.builder(Component.literal("<"), button -> {
-            if (this.page > 0) {
-                this.page--;
-                this.buyArmed = false;
-                this.updateControls();
-            }
-        }).bounds(this.leftPos + GRID_X + 26, this.topPos + 146, 18, 18).build();
-        this.nextPage = Button.builder(Component.literal(">"), button -> {
-            if (this.page + 1 < this.pageCount()) {
-                this.page++;
-                this.buyArmed = false;
-                this.updateControls();
-            }
-        }).bounds(this.leftPos + GRID_X + 118, this.topPos + 146, 18, 18).build();
+        this.previousPage = new MaterialButton(
+                this.leftPos + GRID_X,
+                this.topPos + PAGE_Y,
+                18,
+                16,
+                Component.literal("<"),
+                MaterialButton.Style.GHOST,
+                () -> {
+                    if (this.page > 0) {
+                        this.page--;
+                        this.buyArmed = false;
+                        this.updateControls();
+                    }
+                }
+        );
+        this.nextPage = new MaterialButton(
+                this.leftPos + GRID_X + GRID_COLUMNS * CELL - 18,
+                this.topPos + PAGE_Y,
+                18,
+                16,
+                Component.literal(">"),
+                MaterialButton.Style.GHOST,
+                () -> {
+                    if (this.page + 1 < this.pageCount()) {
+                        this.page++;
+                        this.buyArmed = false;
+                        this.updateControls();
+                    }
+                }
+        );
         this.addRenderableWidget(this.previousPage);
         this.addRenderableWidget(this.nextPage);
 
         this.quantityBox = new EditBox(
                 this.font,
-                this.leftPos + 287,
-                this.topPos + 94,
-                58,
-                18,
+                this.leftPos + QUANTITY_FIELD_X,
+                this.topPos + 92,
+                QUANTITY_FIELD_WIDTH,
+                16,
                 Component.translatable("materialistic.shop.quantity")
         );
+        this.quantityBox.setBordered(false);
+        this.quantityBox.setCentered(true);
+        this.quantityBox.setTextColor(UiTheme.TEXT);
+        this.quantityBox.setTextColorUneditable(UiTheme.DIM);
         this.quantityBox.setMaxLength(6);
         this.quantityBox.setValue("1");
-        this.quantityBox.setResponder(value -> this.onQuantityTyped(value));
+        this.quantityBox.setResponder(this::onQuantityTyped);
         this.addRenderableWidget(this.quantityBox);
 
-        this.minusButton = Button.builder(Component.literal("-"), button -> this.setQuantity(this.quantity - 1, null))
-                .bounds(this.leftPos + 349, this.topPos + 94, 20, 18)
-                .build();
-        this.plusButton = Button.builder(Component.literal("+"), button -> this.setQuantity(this.quantity + 1, null))
-                .bounds(this.leftPos + 371, this.topPos + 94, 20, 18)
-                .build();
+        this.minusButton = new MaterialButton(
+                this.leftPos + QUANTITY_X,
+                this.topPos + 92,
+                18,
+                16,
+                Component.literal("-"),
+                MaterialButton.Style.SECONDARY,
+                () -> this.setQuantity(this.quantity - 1, null)
+        );
+        this.plusButton = new MaterialButton(
+                this.leftPos + QUANTITY_PLUS_X,
+                this.topPos + 92,
+                18,
+                16,
+                Component.literal("+"),
+                MaterialButton.Style.SECONDARY,
+                () -> this.setQuantity(this.quantity + 1, null)
+        );
         this.addRenderableWidget(this.minusButton);
         this.addRenderableWidget(this.plusButton);
 
-        this.presetButtons.put("one", Button.builder(Component.literal("1"), button -> this.setQuantity(1, false))
-                .bounds(this.leftPos + 272, this.topPos + 118, 38, 16).build());
-        this.presetButtons.put("stack", Button.builder(Component.translatable("materialistic.shop.stack"), button -> {
-            Offer offer = this.selectedOffer();
-            if (offer != null) {
-                this.setQuantity(offer.stack.getMaxStackSize(), false);
-            }
-        }).bounds(this.leftPos + 314, this.topPos + 118, 40, 16).build());
-        this.presetButtons.put("shulker", Button.builder(Component.translatable("materialistic.shop.shulker"), button -> {
-            Offer offer = this.selectedOffer();
-            if (offer != null) {
-                this.setQuantity(capacity(offer.stack), true);
-            }
-        }).bounds(this.leftPos + 358, this.topPos + 118, 48, 16).build());
-        for (Button button : this.presetButtons.values()) {
+        this.presetButtons.put("one", new MaterialButton(
+                this.leftPos + DETAIL_INNER_X,
+                this.topPos + 112,
+                32,
+                16,
+                Component.literal("1"),
+                MaterialButton.Style.SEGMENT,
+                () -> this.setQuantity(1, false)
+        ));
+        this.presetButtons.put("stack", new MaterialButton(
+                this.leftPos + DETAIL_INNER_X + 36,
+                this.topPos + 112,
+                32,
+                16,
+                Component.translatable("materialistic.shop.stack"),
+                MaterialButton.Style.SEGMENT,
+                () -> {
+                    Offer offer = this.selectedOffer();
+                    if (offer != null) {
+                        this.setQuantity(offer.stack.getMaxStackSize(), false);
+                    }
+                }
+        ));
+        this.presetButtons.put("shulker", new MaterialButton(
+                this.leftPos + DETAIL_INNER_X + 72,
+                this.topPos + 112,
+                32,
+                16,
+                Component.translatable("materialistic.shop.shulker"),
+                MaterialButton.Style.SEGMENT,
+                () -> {
+                    Offer offer = this.selectedOffer();
+                    if (offer != null) {
+                        this.setQuantity(capacity(offer.stack), true);
+                    }
+                }
+        ));
+        for (MaterialButton button : this.presetButtons.values()) {
             this.addRenderableWidget(button);
         }
 
-        this.looseButton = Button.builder(Component.translatable("materialistic.shop.loose"), button -> this.setBoxed(false))
-                .bounds(this.leftPos + 267, this.topPos + 140, 70, 16)
-                .build();
-        this.boxedButton = Button.builder(Component.translatable("materialistic.shop.boxed"), button -> this.setBoxed(true))
-                .bounds(this.leftPos + 341, this.topPos + 140, 70, 16)
-                .build();
+        this.looseButton = new MaterialButton(
+                this.leftPos + DETAIL_INNER_X,
+                this.topPos + 138,
+                50,
+                16,
+                Component.translatable("materialistic.shop.loose"),
+                MaterialButton.Style.SEGMENT,
+                () -> this.setBoxed(false)
+        );
+        this.boxedButton = new MaterialButton(
+                this.leftPos + DETAIL_INNER_X + 54,
+                this.topPos + 138,
+                50,
+                16,
+                Component.translatable("materialistic.shop.boxed"),
+                MaterialButton.Style.SEGMENT,
+                () -> this.setBoxed(true)
+        );
         this.addRenderableWidget(this.looseButton);
         this.addRenderableWidget(this.boxedButton);
 
-        this.buyButton = Button.builder(Component.translatable("materialistic.shop.buy"), button -> this.onBuy())
-                .bounds(this.leftPos + 265, this.topPos + 200, 148, 20)
-                .build();
+        this.buyButton = new MaterialButton(
+                this.leftPos + DETAIL_INNER_X,
+                this.topPos + 184,
+                108,
+                22,
+                Component.translatable("materialistic.shop.buy"),
+                MaterialButton.Style.PRIMARY,
+                this::onBuy
+        );
         this.addRenderableWidget(this.buyButton);
 
-        this.sellButton = Button.builder(Component.translatable("materialistic.shop.sell_short"), button -> this.openSell())
-                .bounds(this.leftPos + 50, this.topPos + 4, 36, 20)
-                .build();
+        this.sellButton = new MaterialButton(
+                this.leftPos + 190,
+                this.topPos + 7,
+                70,
+                18,
+                Component.translatable("materialistic.shop.sell_short"),
+                MaterialButton.Style.SECONDARY,
+                this::openSell
+        );
         this.addRenderableWidget(this.sellButton);
 
         this.applyFilter();
@@ -247,41 +361,44 @@ public final class ShopScreen extends Screen {
     }
 
     private void updateControls() {
-        for (Map.Entry<String, Button> entry : this.categoryButtons.entrySet()) {
-            ShopCategory category = this.categoryById(entry.getKey());
-            if (category == null) {
-                continue;
-            }
-
-            Component title = Component.translatable(category.title);
-            entry.getValue().setMessage(entry.getKey().equals(this.selectedCategory)
-                    ? Component.literal("» ").append(title)
-                    : title);
+        for (Map.Entry<String, MaterialButton> entry : this.categoryButtons.entrySet()) {
+            entry.getValue().setSelected(entry.getKey().equals(this.selectedCategory));
         }
 
         Offer offer = this.selectedOffer();
         boolean hasItem = offer != null;
         boolean packable = hasItem && isPackable(offer.stack);
         int stackSize = hasItem ? Math.max(1, offer.stack.getMaxStackSize()) : 1;
-        boolean showDelivery = hasItem && packable && this.quantity > stackSize;
 
-        this.quantityBox.setVisible(hasItem);
+        this.quantityBox.visible = hasItem;
         this.minusButton.visible = hasItem;
         this.plusButton.visible = hasItem;
-        for (Button button : this.presetButtons.values()) {
+        for (MaterialButton button : this.presetButtons.values()) {
             button.visible = hasItem;
             button.active = hasItem;
         }
 
-        Button shulkerButton = this.presetButtons.get("shulker");
-        if (shulkerButton != null) {
-            shulkerButton.active = packable;
+        MaterialButton one = this.presetButtons.get("one");
+        MaterialButton stack = this.presetButtons.get("stack");
+        MaterialButton shulker = this.presetButtons.get("shulker");
+        if (one != null) {
+            one.setSelected(this.quantity == 1 && !this.boxed);
+        }
+        if (stack != null) {
+            stack.active = hasItem && stackSize > 1;
+            stack.setSelected(hasItem && stackSize > 1 && this.quantity == stackSize && !this.boxed);
+        }
+        if (shulker != null) {
+            shulker.active = packable;
+            shulker.setSelected(hasItem && this.boxed && this.quantity == this.capacity(offer.stack));
         }
 
-        this.looseButton.visible = showDelivery;
-        this.boxedButton.visible = showDelivery;
-        this.looseButton.active = showDelivery && !this.boxed;
-        this.boxedButton.active = showDelivery && this.boxed;
+        this.looseButton.visible = packable;
+        this.boxedButton.visible = packable;
+        this.looseButton.active = packable;
+        this.boxedButton.active = packable;
+        this.looseButton.setSelected(packable && !this.boxed);
+        this.boxedButton.setSelected(packable && this.boxed);
 
         this.previousPage.active = this.page > 0;
         this.nextPage.active = this.page + 1 < this.pageCount();
@@ -416,10 +533,10 @@ public final class ShopScreen extends Screen {
         this.purchasePending = false;
         this.buyArmed = false;
         if (result.success()) {
-            this.statusColor = 0xFF8FE388;
+            this.statusColor = UiTheme.SUCCESS;
             this.statusText = Component.translatable("materialistic.shop.complete").getString();
         } else {
-            this.statusColor = 0xFFFF7777;
+            this.statusColor = UiTheme.DANGER;
             this.statusText = Component.translatable("materialistic.shop.failed").getString();
         }
         this.updateControls();
@@ -445,15 +562,6 @@ public final class ShopScreen extends Screen {
             }
         }
 
-        return null;
-    }
-
-    private ShopCategory categoryById(String id) {
-        for (ShopCategory category : this.snapshot.categories) {
-            if (category.id.equals(id)) {
-                return category;
-            }
-        }
         return null;
     }
 
@@ -521,42 +629,116 @@ public final class ShopScreen extends Screen {
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractBackground(graphics, mouseX, mouseY, delta);
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
-                TEXTURE,
-                this.leftPos,
-                this.topPos,
-                0.0F,
-                0.0F,
-                IMAGE_WIDTH,
-                IMAGE_HEIGHT,
-                512,
-                256
+        graphics.fill(0, 0, this.width, this.height, UiTheme.OVERLAY);
+        UiDraw.panel(graphics, this.leftPos, this.topPos, IMAGE_WIDTH, IMAGE_HEIGHT, 10);
+
+        int x = this.leftPos;
+        int y = this.topPos;
+
+        UiDraw.roundedRect(graphics, x + 266, y + 7, 126, 18, 9, UiTheme.BORDER_DARK);
+        UiDraw.roundedRect(graphics, x + 267, y + 8, 124, 16, 8, UiTheme.BORDER);
+        UiDraw.roundedRect(graphics, x + 268, y + 9, 122, 14, 7, UiTheme.ACCENT_SOFT);
+        UiDraw.field(
+                graphics,
+                x + SEARCH_X,
+                y + SEARCH_Y,
+                SEARCH_WIDTH,
+                SEARCH_HEIGHT,
+                this.searchBox != null && this.searchBox.isFocused()
         );
+        UiDraw.card(graphics, x + BROWSE_X, y + BROWSE_Y, BROWSE_WIDTH, BROWSE_HEIGHT, 8);
+        UiDraw.card(graphics, x + RIGHT_X, y + CONTENT_Y, RIGHT_WIDTH, 182, 8);
+
+        if (this.selectedOffer() != null && this.quantityBox != null) {
+            UiDraw.field(
+                    graphics,
+                    x + QUANTITY_FIELD_X,
+                    y + 92,
+                    QUANTITY_FIELD_WIDTH,
+                    16,
+                    this.quantityBox.isFocused()
+            );
+        }
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
-
-        graphics.text(this.font, this.title, this.leftPos + 8, this.topPos + 10, 0xFFFFD166, true);
-        Component balance = Component.translatable("materialistic.shop.balance", Money.currency(this.snapshot.balance));
-        int balanceWidth = this.font.width(balance);
-        int balanceGroupWidth = 20 + balanceWidth;
-        int balanceX = this.leftPos + 258 + Math.max(0, (162 - balanceGroupWidth) / 2);
-        graphics.item(new ItemStack(Items.GOLD_INGOT), balanceX, this.topPos + 6);
-        graphics.text(
-                this.font,
-                balance,
-                balanceX + 20,
-                this.topPos + 10,
-                0xFFFFE08A,
-                true
-        );
-
         this.drawGrid(graphics, mouseX, mouseY);
         this.drawPageText(graphics);
         this.drawDetail(graphics);
+        this.drawHeader(graphics);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        this.drawHoverTooltip(graphics, mouseX, mouseY);
+    }
+
+    private void drawHoverTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        if (this.previousPage.isMouseOver(mouseX, mouseY)) {
+            this.drawTextTooltip(
+                    graphics,
+                    Component.translatable("materialistic.shop.prev_page"),
+                    mouseX,
+                    mouseY
+            );
+            return;
+        }
+        if (this.nextPage.isMouseOver(mouseX, mouseY)) {
+            this.drawTextTooltip(
+                    graphics,
+                    Component.translatable("materialistic.shop.next_page"),
+                    mouseX,
+                    mouseY
+            );
+            return;
+        }
+
+        int hovered = this.gridIndexAt(mouseX, mouseY);
+        if (hovered >= 0 && hovered < this.filtered.size()) {
+            this.drawItemTooltip(graphics, this.filtered.get(hovered), mouseX, mouseY);
+        }
+    }
+
+    private void drawTextTooltip(
+            GuiGraphicsExtractor graphics,
+            Component text,
+            int mouseX,
+            int mouseY
+    ) {
+        int width = this.font.width(text) + 14;
+        int x = mouseX + 10;
+        int y = mouseY + 10;
+        if (x + width > this.leftPos + IMAGE_WIDTH - 8) {
+            x = mouseX - width - 10;
+        }
+        if (y + 20 > this.topPos + IMAGE_HEIGHT - 8) {
+            y = mouseY - 20 - 10;
+        }
+        UiDraw.panel(graphics, x, y, width, 20, 6);
+        graphics.text(this.font, text, x + 7, y + 6, UiTheme.MUTED, false);
+    }
+
+    private void drawHeader(GuiGraphicsExtractor graphics) {
+        int x = this.leftPos;
+        int y = this.topPos;
+        graphics.text(this.font, this.title, x + 10, y + 7, UiTheme.TEXT, true);
+        graphics.fill(x + 10, y + 17, x + 30, y + 19, UiTheme.ACCENT);
+        graphics.text(
+                this.font,
+                Component.translatable("materialistic.shop.subtitle"),
+                x + 10,
+                y + 21,
+                UiTheme.MUTED,
+                false
+        );
+
+        graphics.item(new ItemStack(Items.GOLD_INGOT), x + 274, y + 9);
+        graphics.text(
+                this.font,
+                Component.translatable("materialistic.shop.balance", Money.currency(this.snapshot.balance)),
+                x + 292,
+                y + 12,
+                UiTheme.ACCENT,
+                false
+        );
     }
 
     private void drawGrid(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -568,31 +750,48 @@ public final class ShopScreen extends Screen {
             int local = index - start;
             int column = local % GRID_COLUMNS;
             int row = local / GRID_COLUMNS;
-            int x = this.leftPos + GRID_X + column * 18;
-            int y = this.topPos + GRID_Y + row * 18;
+            int x = this.leftPos + GRID_X + column * CELL;
+            int y = this.topPos + GRID_Y + row * CELL;
             Offer offer = this.filtered.get(index);
 
-            if (offer.entry.id.equals(this.selectedId)) {
-                graphics.outline(x - 1, y - 1, 20, 20, 0xFFFFD166);
-            } else if (hovered == index) {
-                graphics.fill(x - 1, y - 1, x + 17, y + 17, 0x30FFFFFF);
-            }
-
-            graphics.item(offer.stack, x, y);
+            boolean selected = offer.entry.id.equals(this.selectedId);
+            int fill = selected ? UiTheme.ACCENT_SOFT : hovered == index ? UiTheme.CARD_HOVER : UiTheme.CARD;
+            int border = selected ? UiTheme.ACCENT : hovered == index ? UiTheme.BORDER : UiTheme.BORDER_SOFT;
+            UiDraw.roundedRect(graphics, x + 1, y + 1, 18, 18, 4, border);
+            UiDraw.roundedRect(graphics, x + 2, y + 2, 16, 16, 3, fill);
+            graphics.item(offer.stack, x + 2, y + 2);
+            graphics.itemDecorations(this.font, offer.stack, x + 2, y + 2);
         }
 
         if (this.filtered.isEmpty()) {
             graphics.centeredText(
                     this.font,
                     Component.translatable("materialistic.shop.no_items"),
-                    this.leftPos + GRID_X + 81,
-                    this.topPos + 82,
-                    0xFFAAAAAA
+                    this.leftPos + CENTER_X + CENTER_WIDTH / 2,
+                    this.topPos + 120,
+                    UiTheme.MUTED
             );
-        } else if (hovered >= 0 && hovered < this.filtered.size()) {
-            Offer offer = this.filtered.get(hovered);
-            graphics.setTooltipForNextFrame(this.font, offer.stack, mouseX, mouseY);
         }
+    }
+
+    private void drawItemTooltip(GuiGraphicsExtractor graphics, Offer offer, int mouseX, int mouseY) {
+        Component name = offer.stack.getHoverName();
+        Component price = Component.translatable("materialistic.shop.price", Money.currency(offer.entry.price));
+        int width = Math.max(this.font.width(name), this.font.width(price)) + 16;
+        int height = 30;
+        int x = mouseX + 12;
+        int y = mouseY + 12;
+        int gridRight = this.leftPos + BROWSE_X + BROWSE_WIDTH - 4;
+        if (x + width > gridRight) {
+            x = Math.max(this.leftPos + BROWSE_X + 4, mouseX - width - 12);
+        }
+        if (y + height > this.height - 8) {
+            y = mouseY - height - 12;
+        }
+
+        UiDraw.panel(graphics, x, y, width, height, 6);
+        graphics.text(this.font, name, x + 8, y + 7, UiTheme.TEXT, false);
+        graphics.text(this.font, price, x + 8, y + 19, UiTheme.ACCENT, false);
     }
 
     private void drawPageText(GuiGraphicsExtractor graphics) {
@@ -603,9 +802,9 @@ public final class ShopScreen extends Screen {
                         this.page + 1,
                         this.pageCount()
                 ),
-                this.leftPos + GRID_X + 81,
-                this.topPos + 152,
-                0xFFB8C7D9
+                this.leftPos + CENTER_X + CENTER_WIDTH / 2,
+                this.topPos + 194,
+                UiTheme.MUTED
         );
     }
 
@@ -615,63 +814,85 @@ public final class ShopScreen extends Screen {
             graphics.centeredText(
                     this.font,
                     Component.translatable("materialistic.shop.select"),
-                    this.leftPos + DETAIL_X + 74,
-                    this.topPos + 62,
-                    0xFFAAAAAA
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    this.topPos + 120,
+                    UiTheme.MUTED
             );
             return;
         }
 
-        int x = this.leftPos + DETAIL_X;
-        graphics.item(offer.stack, x + 2, this.topPos + 32);
-        List<FormattedCharSequence> nameLines = this.font.split(offer.stack.getHoverName(), 90);
-        for (int i = 0; i < Math.min(3, nameLines.size()); i++) {
-            graphics.text(this.font, nameLines.get(i), x + 40, this.topPos + 34 + i * 10, 0xFFFFFFFF);
+        int x = this.leftPos + DETAIL_INNER_X;
+        int y = this.topPos;
+
+        graphics.item(offer.stack, x, y + 42);
+        graphics.itemDecorations(this.font, offer.stack, x, y + 42);
+        List<FormattedCharSequence> nameLines = this.font.split(offer.stack.getHoverName(), 78);
+        for (int i = 0; i < Math.min(2, nameLines.size()); i++) {
+            graphics.text(this.font, nameLines.get(i), x + 22, y + 44 + i * 10, UiTheme.TEXT, false);
         }
 
-        int center = this.leftPos + 339;
-        graphics.centeredText(
+        graphics.text(this.font, Component.translatable("materialistic.shop.price_label"), x, y + 64, UiTheme.DIM, false);
+        UiDraw.rightText(
+                graphics,
                 this.font,
-                Component.translatable("materialistic.shop.price", Money.currency(offer.entry.price)),
-                center,
-                this.topPos + 70,
-                0xFFFFE08A
+                Component.literal(Money.currency(offer.entry.price)),
+                this.leftPos + DETAIL_INNER_RIGHT,
+                y + 64,
+                UiTheme.ACCENT
         );
+        UiDraw.divider(graphics, x, y + 76, DETAIL_INNER_RIGHT - x);
+
         graphics.centeredText(
                 this.font,
                 Component.translatable("materialistic.shop.quantity"),
-                center,
-                this.topPos + 84,
-                0xFFB8C7D9
+                this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                y + 78,
+                UiTheme.DIM
         );
+
+        if (isPackable(offer.stack)) {
+            graphics.text(
+                    this.font,
+                    Component.translatable("materialistic.shop.delivery"),
+                    x,
+                    y + 132,
+                    UiTheme.DIM,
+                    false
+            );
+        }
 
         int boxes = this.boxCount(offer);
         if (this.boxed) {
             graphics.centeredText(
                     this.font,
-                    Component.translatable("materialistic.shop.boxes", boxes, this.snapshot.maxShulkerBoxes),
-                    center,
-                    this.topPos + 158,
-                    0xFFB8C7D9
-            );
-            graphics.centeredText(
-                    this.font,
                     Component.translatable(
-                            "materialistic.shop.box_cost",
+                            "materialistic.shop.boxes_cost",
+                            boxes,
+                            this.snapshot.maxShulkerBoxes,
                             Money.currency(this.snapshot.shulkerBoxPrice * boxes)
                     ),
-                    center,
-                    this.topPos + 170,
-                    0xFFB8C7D9
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    y + 158,
+                    UiTheme.MUTED
+            );
+        } else if (isPackable(offer.stack)) {
+            graphics.centeredText(
+                    this.font,
+                    Component.translatable("materialistic.shop.loose_hint"),
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    y + 158,
+                    UiTheme.MUTED
             );
         }
 
-        graphics.centeredText(
+        graphics.text(this.font, Component.translatable("materialistic.shop.total_label"), x, y + 166, UiTheme.DIM, false);
+        UiDraw.rightText(
+                graphics,
                 this.font,
-                Component.translatable("materialistic.shop.total", Money.currency(this.total(offer))),
-                center,
-                this.topPos + 180,
-                0xFFFFD166
+                Component.literal(Money.currency(this.total(offer))),
+                this.leftPos + DETAIL_INNER_RIGHT,
+                y + 166,
+                UiTheme.ACCENT
         );
 
         int dropped = this.estimatedDropped(offer);
@@ -680,28 +901,36 @@ public final class ShopScreen extends Screen {
                     this.boxed ? "materialistic.shop.drop_boxes" : "materialistic.shop.drop_items",
                     dropped
             );
-            graphics.centeredText(this.font, warning, center, this.topPos + 190, 0xFFFF7777);
-        } else if (!this.statusText.isEmpty()) {
-            graphics.centeredText(this.font, this.statusText, center, this.topPos + 190, this.statusColor);
-        }
-
-        if (this.buyArmed) {
+            graphics.centeredText(
+                    this.font,
+                    warning,
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    y + 176,
+                    UiTheme.DANGER
+            );
+        } else if (this.buyArmed) {
             graphics.centeredText(
                     this.font,
                     Component.translatable("materialistic.shop.confirm_drop"),
-                    center,
-                    this.topPos + 194,
-                    0xFFFF7777
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    y + 176,
+                    UiTheme.DANGER
             );
-        }
-
-        if (this.total(offer) > this.snapshot.balance) {
+        } else if (!this.statusText.isEmpty()) {
+            graphics.centeredText(
+                    this.font,
+                    Component.literal(this.statusText),
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    y + 176,
+                    this.statusColor
+            );
+        } else if (this.total(offer) > this.snapshot.balance) {
             graphics.centeredText(
                     this.font,
                     Component.translatable("materialistic.shop.no_money"),
-                    center,
-                    this.topPos + 194,
-                    0xFFFF7777
+                    this.leftPos + RIGHT_X + RIGHT_WIDTH / 2,
+                    y + 176,
+                    UiTheme.DANGER
             );
         }
     }
@@ -713,13 +942,68 @@ public final class ShopScreen extends Screen {
             return -1;
         }
 
-        int column = localX / 18;
-        int row = localY / 18;
+        int column = localX / CELL;
+        int row = localY / CELL;
         if (column >= GRID_COLUMNS || row >= GRID_ROWS) {
             return -1;
         }
 
         return this.page * GRID_SIZE + row * GRID_COLUMNS + column;
+    }
+
+
+    @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        if (this.getFocused() != null) {
+            return super.keyPressed(event);
+        }
+
+        if (super.keyPressed(event)) {
+            return true;
+        }
+
+        int delta;
+        switch (event.key()) {
+            case 263 -> delta = -1;
+            case 262 -> delta = 1;
+            case 265 -> delta = -GRID_COLUMNS;
+            case 264 -> delta = GRID_COLUMNS;
+            default -> {
+                return false;
+            }
+        }
+
+        this.moveGridSelection(delta);
+        return true;
+    }
+
+    private void moveGridSelection(int delta) {
+        if (this.filtered.isEmpty()) {
+            return;
+        }
+
+        int current = -1;
+        for (int index = 0; index < this.filtered.size(); index++) {
+            if (this.filtered.get(index).entry.id.equals(this.selectedId)) {
+                current = index;
+                break;
+            }
+        }
+
+        int next = current < 0 ? 0 : Math.max(0, Math.min(this.filtered.size() - 1, current + delta));
+        if (next == current) {
+            return;
+        }
+
+        Offer offer = this.filtered.get(next);
+        this.selectedId = offer.entry.id;
+        this.page = next / GRID_SIZE;
+        this.quantity = 1;
+        this.boxed = false;
+        this.manualDelivery = false;
+        this.buyArmed = false;
+        this.statusText = "";
+        this.updateControls();
     }
 
     @Override
