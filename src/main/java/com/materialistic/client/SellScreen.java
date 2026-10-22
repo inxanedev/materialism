@@ -20,7 +20,7 @@ import java.util.List;
 
 public final class SellScreen extends AbstractContainerScreen<SellMenu> {
     private static final int PANEL_WIDTH = 304;
-    private static final int PANEL_HEIGHT = 232;
+    private static final int PANEL_HEIGHT = 236;
     private static final int SIDEBAR_X = 194;
     private static final int SIDEBAR_TEXT_X = 202;
     private static final int SIDEBAR_INNER_WIDTH = 88;
@@ -89,8 +89,8 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
         super.extractBackground(graphics, mouseX, mouseY, delta);
         graphics.fill(0, 0, this.width, this.height, UiTheme.OVERLAY);
         UiDraw.panel(graphics, this.leftPos, this.topPos, PANEL_WIDTH, PANEL_HEIGHT, 10);
-        UiDraw.card(graphics, this.leftPos + 6, this.topPos + 6, 182, 220, 8);
-        UiDraw.card(graphics, this.leftPos + SIDEBAR_X, this.topPos + 6, 104, 220, 8);
+        UiDraw.card(graphics, this.leftPos + 6, this.topPos + 6, 182, 224, 8);
+        UiDraw.card(graphics, this.leftPos + SIDEBAR_X, this.topPos + 6, 104, 224, 8);
     }
 
     @Override
@@ -178,7 +178,7 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
                     this.leftPos + 6,
                     this.topPos + 6,
                     this.leftPos + 188,
-                    this.topPos + 226,
+                    this.topPos + 230,
                     0xAA000000
             );
             UiDraw.card(graphics, this.leftPos + 20, this.topPos + 72, 154, 72, 8);

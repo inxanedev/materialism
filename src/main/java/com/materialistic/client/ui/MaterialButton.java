@@ -55,17 +55,17 @@ public final class MaterialButton extends AbstractWidget {
             border = UiTheme.BORDER_SOFT;
             textColor = UiTheme.DIM;
         } else if (this.style == Style.PRIMARY) {
-            background = hovered ? UiTheme.ACCENT_HOVER : UiTheme.ACCENT;
-            border = UiTheme.ACCENT_HOVER;
-            textColor = UiTheme.ACCENT_DARK;
+            background = hovered ? 0xFF4A3A1D : UiTheme.ACCENT_SOFT;
+            border = hovered ? UiTheme.ACCENT_HOVER : UiTheme.ACCENT;
+            textColor = hovered ? UiTheme.ACCENT_HOVER : UiTheme.ACCENT;
         } else if (this.style == Style.NAV) {
             background = this.selected ? UiTheme.ACCENT_SOFT : hovered ? UiTheme.CARD : UiTheme.PANEL;
             border = this.selected ? UiTheme.ACCENT : UiTheme.PANEL;
             textColor = this.selected ? UiTheme.ACCENT : hovered ? UiTheme.TEXT : UiTheme.MUTED;
         } else if (this.style == Style.SEGMENT) {
-            background = this.selected ? UiTheme.ACCENT : hovered ? UiTheme.CARD_HOVER : UiTheme.FIELD;
+            background = this.selected ? UiTheme.ACCENT_SOFT : hovered ? UiTheme.CARD_HOVER : UiTheme.FIELD;
             border = this.selected ? UiTheme.ACCENT : UiTheme.BORDER;
-            textColor = this.selected ? UiTheme.ACCENT_DARK : hovered ? UiTheme.TEXT : UiTheme.MUTED;
+            textColor = this.selected ? UiTheme.ACCENT : hovered ? UiTheme.TEXT : UiTheme.MUTED;
         } else if (this.style == Style.GHOST) {
             background = hovered ? UiTheme.CARD : UiTheme.PANEL;
             border = hovered ? UiTheme.BORDER : UiTheme.PANEL;
@@ -105,7 +105,8 @@ public final class MaterialButton extends AbstractWidget {
             if (this.leftAligned) {
                 graphics.text(this.font(), this.getMessage(), this.getX() + 9, textY, textColor, false);
             } else {
-                graphics.centeredText(this.font(), this.getMessage(), this.getX() + this.width / 2, textY, textColor);
+                int textX = this.getX() + (this.width - this.font().width(this.getMessage())) / 2;
+                graphics.text(this.font(), this.getMessage(), textX, textY, textColor, false);
             }
         }
     }
