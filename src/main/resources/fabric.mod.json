@@ -23,6 +23,9 @@
     ],
     "modmenu": [
       "com.materialistic.client.MaterialisticModMenu"
+    ],
+    "controlify": [
+      "com.materialistic.client.compat.ShopControlify"
     ]
   },
   "depends": {
@@ -32,6 +35,7 @@
     "fabric-api": "*"
   },
   "suggests": {
-    "modmenu": ">=20.0.3"
+    "modmenu": ">=20.0.3",
+    "controlify": ">=3.5.3"
   }
 }

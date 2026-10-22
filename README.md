@@ -13,7 +13,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 - Sell prices account for item durability.
 - Shop supports categories, search, paging, stack/custom quantities, and shulker-box packaging.
 - Optional ModMenu configuration screen.
-- Controller-friendly shop navigation: every item slot and control is focusable, compatible with Controlify.
+- Controller-friendly shop navigation: every item slot and control is focusable with Controlify, and L1/R1 change shop pages.
 
 ## Requirements
 

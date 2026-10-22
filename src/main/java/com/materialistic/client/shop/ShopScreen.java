@@ -188,13 +188,7 @@ public final class ShopScreen extends Screen {
                 16,
                 Component.literal("<"),
                 MaterialButton.Style.GHOST,
-                () -> {
-                    if (this.page > 0) {
-                        this.page--;
-                        this.buyArmed = false;
-                        this.updateControls();
-                    }
-                }
+                this::showPreviousPage
         );
         this.nextPage = new MaterialButton(
                 this.leftPos + GRID_X + GRID_COLUMNS * CELL - 18,
@@ -203,13 +197,7 @@ public final class ShopScreen extends Screen {
                 16,
                 Component.literal(">"),
                 MaterialButton.Style.GHOST,
-                () -> {
-                    if (this.page + 1 < this.pageCount()) {
-                        this.page++;
-                        this.buyArmed = false;
-                        this.updateControls();
-                    }
-                }
+                this::showNextPage
         );
         this.addRenderableWidget(this.previousPage);
         this.addRenderableWidget(this.nextPage);
@@ -337,6 +325,28 @@ public final class ShopScreen extends Screen {
         this.addRenderableWidget(this.sellButton);
 
         this.applyFilter();
+    }
+
+    public boolean showPreviousPage() {
+        if (this.page <= 0) {
+            return false;
+        }
+
+        this.page--;
+        this.buyArmed = false;
+        this.updateControls();
+        return true;
+    }
+
+    public boolean showNextPage() {
+        if (this.page + 1 >= this.pageCount()) {
+            return false;
+        }
+
+        this.page++;
+        this.buyArmed = false;
+        this.updateControls();
+        return true;
     }
 
     private void applyFilter() {
