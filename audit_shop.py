@@ -6,9 +6,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 JAR = Path(__import__("sys").argv[1]) if len(__import__("sys").argv) > 1 else ROOT.parent / "26.2-0.20.1.jar"
-WORTH = ROOT / "src/main/resources/assets/materialistic/worth.json"
-CATALOG = ROOT / "src/main/resources/assets/materialistic/shop.json"
-CONFIG = ROOT / "run/config/materialistic-shop.json"
+WORTH = ROOT / "src/main/resources/assets/materialism/worth.json"
+CATALOG = ROOT / "src/main/resources/assets/materialism/shop.json"
+CONFIG = ROOT / "run/config/materialism-shop.json"
 RECIPE_PREFIX = "data/minecraft/recipe/"
 TAG_PREFIX = "data/minecraft/tags/item/"
 

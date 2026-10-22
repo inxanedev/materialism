@@ -1,31 +1,31 @@
 {
   "schemaVersion": 1,
-  "id": "materialistic",
+  "id": "materialism",
   "version": "${version}",
-  "name": "Materialistic",
+  "name": "Materialism",
   "description": "A dark-fantasy item economy with a custom shop and selling interface.",
   "authors": [
-    "Materialistic"
+    "Materialism"
   ],
   "contact": {
-    "homepage": "https://github.com/inxanedev/materialistic",
-    "sources": "https://github.com/inxanedev/materialistic"
+    "homepage": "https://github.com/inxanedev/materialism",
+    "sources": "https://github.com/inxanedev/materialism"
   },
   "license": "MIT",
-  "icon": "assets/materialistic/icon.png",
+  "icon": "assets/materialism/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.materialistic.Materialistic"
+      "com.materialism.Materialism"
     ],
     "client": [
-      "com.materialistic.client.MaterialisticClient"
+      "com.materialism.client.MaterialismClient"
     ],
     "modmenu": [
-      "com.materialistic.client.MaterialisticModMenu"
+      "com.materialism.client.MaterialismModMenu"
     ],
     "controlify": [
-      "com.materialistic.client.compat.ShopControlify"
+      "com.materialism.client.compat.ShopControlify"
     ]
   },
   "depends": {

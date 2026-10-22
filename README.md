@@ -1,8 +1,8 @@
-# Materialistic
+# Materialism
 
 A dark-fantasy Fabric economy and shop mod for Minecraft **26.2**.
 
-Materialistic adds a per-world currency, a sell screen, and a category-based shop.
+Materialism adds a per-world currency, a sell screen, and a category-based shop.
 
 ## Features
 
@@ -30,7 +30,7 @@ Materialistic adds a per-world currency, a sell screen, and a category-based sho
 ./gradlew build
 ```
 
-The mod jar is written to `build/libs/materialistic-0.2.1.jar`.
+The mod jar is written to `build/libs/materialism-0.3.0.jar`.
 
 ## Commands
 
@@ -44,7 +44,7 @@ The sell and shop keybinds are unassigned by default.
 
 ## Configuration
 
-Shop pricing is controlled server-side by `config/materialistic-shop.json`:
+Shop pricing is controlled server-side by `config/materialism-shop.json`:
 
 ```json
 {
@@ -55,8 +55,8 @@ Shop pricing is controlled server-side by `config/materialistic-shop.json`:
 }
 ```
 
-The client settings file is `config/materialistic-client.json`.
+The client settings file is `config/materialism-client.json`.
 
 ## Version
 
-Current version: **v0.2.1**
+Current version: **v0.3.0**
