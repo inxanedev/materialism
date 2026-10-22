@@ -6,6 +6,7 @@ import java.util.Locale;
 
 public final class Money {
     public static final long SCALE = 10_000L;
+    private static volatile CurrencyFormat currencyFormat = CurrencyFormat.DEFAULT;
 
     private Money() {
     }
@@ -28,7 +29,15 @@ public final class Money {
         return String.format(Locale.ROOT, "%,.2f", units / (double) SCALE);
     }
 
+    public static CurrencyFormat currencyFormat() {
+        return currencyFormat;
+    }
+
+    public static void setCurrencyFormat(CurrencyFormat format) {
+        currencyFormat = format == null ? CurrencyFormat.DEFAULT : format;
+    }
+
     public static String currency(long units) {
-        return formatShort(units) + "c";
+        return currencyFormat.format(units);
     }
 }

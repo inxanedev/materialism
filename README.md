@@ -46,16 +46,20 @@ The sell and shop keybinds are unassigned by default.
 
 ## Configuration
 
-Shop pricing is controlled server-side by `config/materialism-shop.json`:
+Economy and shop settings are controlled server-side by `config/materialism-shop.json`:
 
 ```json
 {
   "buyPriceMultiplier": 3.0,
   "shulkerBoxPriceOverride": null,
   "maxShulkerBoxesPerPurchase": 5,
-  "itemPriceOverrides": {}
+  "itemPriceOverrides": {},
+  "currencySymbol": "c",
+  "currencyPosition": "suffix"
 }
 ```
+
+`currencySymbol` is the text shown before or after the amount. Set `currencyPosition` to `prefix` for `$100.00`-style output or `suffix` for `100.00$`-style output. The defaults reproduce the current `100.00c` formatting. Restart the server after changing these values.
 
 The client settings file is `config/materialism-client.json`.
 

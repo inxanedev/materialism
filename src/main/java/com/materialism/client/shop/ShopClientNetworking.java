@@ -1,6 +1,9 @@
 package com.materialism.client.shop;
 
 import com.google.gson.Gson;
+import com.materialism.CurrencyFormat;
+import com.materialism.Money;
+import com.materialism.network.CurrencyFormatPayload;
 import com.materialism.network.OpenShopPayload;
 import com.materialism.network.PurchaseResultPayload;
 import com.materialism.shop.ShopSnapshot;
@@ -28,6 +31,12 @@ public final class ShopClientNetworking {
                         screen.handlePurchaseResult(payload);
                     }
                 })
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(CurrencyFormatPayload.TYPE, (payload, context) ->
+                context.client().execute(() -> Money.setCurrencyFormat(
+                        new CurrencyFormat(payload.symbol(), payload.prefix())
+                ))
         );
     }
 }
