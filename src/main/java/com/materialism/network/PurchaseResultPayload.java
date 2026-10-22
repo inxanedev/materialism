@@ -7,6 +7,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 public record PurchaseResultPayload(
+        long requestId,
         boolean success,
         long balance,
         String itemId,
@@ -21,6 +22,7 @@ public record PurchaseResultPayload(
     );
     public static final StreamCodec<RegistryFriendlyByteBuf, PurchaseResultPayload> CODEC = StreamCodec.of(
             (buffer, payload) -> {
+                buffer.writeVarLong(payload.requestId());
                 buffer.writeBoolean(payload.success());
                 buffer.writeVarLong(payload.balance());
                 buffer.writeUtf(payload.itemId(), 32767);
@@ -31,6 +33,7 @@ public record PurchaseResultPayload(
                 buffer.writeBoolean(payload.boxed());
             },
             buffer -> new PurchaseResultPayload(
+                    buffer.readVarLong(),
                     buffer.readBoolean(),
                     buffer.readVarLong(),
                     buffer.readUtf(32767),

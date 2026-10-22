@@ -23,7 +23,6 @@ public final class SellMenu extends AbstractContainerMenu {
     private final SimpleContainer container = new SimpleContainer(CONTAINER_SIZE);
     private final Player owner;
     private boolean processed;
-    private boolean cancelled;
 
     public SellMenu(int containerId, Inventory inventory) {
         super(ModMenus.SELL, containerId);
@@ -68,7 +67,6 @@ public final class SellMenu extends AbstractContainerMenu {
         }
 
         this.processed = true;
-        this.cancelled = true;
         this.returnAll(player);
         player.closeContainer();
     }
@@ -128,9 +126,7 @@ public final class SellMenu extends AbstractContainerMenu {
             }
 
             ItemStack copy = stack.copy();
-            if (player.hasDisconnected()) {
-                player.drop(copy, false);
-            } else if (!player.getInventory().add(copy)) {
+            if (!player.getInventory().add(copy)) {
                 player.drop(copy, false);
             }
         }
@@ -176,11 +172,17 @@ public final class SellMenu extends AbstractContainerMenu {
         }
 
         this.processed = true;
-        if (this.cancelled) {
-            this.returnAll(serverPlayer);
-        } else {
-            this.sellContents(serverPlayer);
+        this.returnAll(serverPlayer);
+    }
+
+    public boolean hasItems() {
+        for (int index = 0; index < CONTAINER_SIZE; index++) {
+            if (!this.container.getItem(index).isEmpty()) {
+                return true;
+            }
         }
+
+        return false;
     }
 
     public SimpleContainer getContainer() {

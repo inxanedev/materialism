@@ -5,6 +5,7 @@ import com.materialism.client.ui.MaterialButton;
 import com.materialism.client.ui.UiDraw;
 import com.materialism.client.ui.UiTheme;
 import com.materialism.network.BuyItemPayload;
+import com.materialism.network.CloseShopPayload;
 import com.materialism.network.PurchaseResultPayload;
 import com.materialism.shop.ShopCategory;
 import com.materialism.shop.ShopEntry;
@@ -24,6 +25,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -85,6 +87,8 @@ public final class ShopScreen extends Screen {
     private boolean updatingQuantity;
     private boolean buyArmed;
     private boolean purchasePending;
+    private long nextRequestId;
+    private long pendingRequestId;
     private String statusText = "";
     private int statusColor = UiTheme.MUTED;
 
@@ -543,16 +547,23 @@ public final class ShopScreen extends Screen {
         }
 
         this.purchasePending = true;
+        this.pendingRequestId = ++this.nextRequestId;
         this.buyArmed = false;
         this.updateControls();
         ClientPlayNetworking.send(new BuyItemPayload(
                 Identifier.parse(offer.entry.id),
                 this.quantity,
-                this.boxed
+                this.boxed,
+                this.pendingRequestId
         ));
     }
 
     public void handlePurchaseResult(PurchaseResultPayload result) {
+        if (this.pendingRequestId == 0L || result.requestId() != this.pendingRequestId) {
+            return;
+        }
+
+        this.pendingRequestId = 0L;
         this.snapshot.balance = result.balance();
         this.purchasePending = false;
         this.buyArmed = false;
@@ -571,8 +582,16 @@ public final class ShopScreen extends Screen {
             return;
         }
 
-        this.minecraft.gui.setScreen(null);
+        this.onClose();
         this.minecraft.getConnection().sendCommand("sell");
+    }
+
+    @Override
+    public void onClose() {
+        if (this.minecraft.getConnection() != null) {
+            ClientPlayNetworking.send(CloseShopPayload.INSTANCE);
+        }
+        super.onClose();
     }
 
     private Offer selectedOffer() {
@@ -623,7 +642,7 @@ public final class ShopScreen extends Screen {
     private int estimatedDropped(Offer offer) {
         if (this.boxed) {
             int free = 0;
-            for (int slot = 0; slot < this.minecraft.player.getInventory().getContainerSize(); slot++) {
+            for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
                 if (this.minecraft.player.getInventory().getItem(slot).isEmpty()) {
                     free++;
                 }
@@ -633,7 +652,7 @@ public final class ShopScreen extends Screen {
 
         int stackSize = Math.max(1, offer.stack.getMaxStackSize());
         long room = 0L;
-        for (int slot = 0; slot < this.minecraft.player.getInventory().getContainerSize(); slot++) {
+        for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
             ItemStack stack = this.minecraft.player.getInventory().getItem(slot);
             if (stack.isEmpty()) {
                 room += stackSize;

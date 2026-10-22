@@ -9,8 +9,11 @@ import com.materialism.economy.EconomyStore;
 import com.materialism.network.OpenShopPayload;
 import com.materialism.network.PurchaseResultPayload;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,22 +30,50 @@ import net.minecraft.world.level.block.ShulkerBoxBlock;
 public final class ShopService {
     private static final Gson GSON = new Gson();
     private static final int SHULKER_ROWS = 27;
+    private static final Set<UUID> OPEN_SHOPS = new HashSet<>();
 
     private ShopService() {
     }
 
     public static void open(ServerPlayer player) {
+        if (!ServerPlayNetworking.canSend(player, OpenShopPayload.TYPE)) {
+            return;
+        }
+
+        OPEN_SHOPS.add(player.getUUID());
         ShopSnapshot snapshot = snapshot(player);
         ServerPlayNetworking.send(player, new OpenShopPayload(GSON.toJson(snapshot)));
     }
 
-    public static void buy(ServerPlayer player, Identifier itemId, int quantity, boolean boxed) {
+    public static void close(ServerPlayer player) {
+        OPEN_SHOPS.remove(player.getUUID());
+    }
+
+    public static void clearOpenShops() {
+        OPEN_SHOPS.clear();
+    }
+
+    public static void buy(
+            ServerPlayer player,
+            Identifier itemId,
+            int quantity,
+            boolean boxed,
+            long requestId
+    ) {
         ShopConfig config = ShopConfig.get();
         ShopCatalog.CatalogItem catalogItem = ShopCatalog.find(itemId.toString());
         Optional<Item> resolved = BuiltInRegistries.ITEM.getOptional(itemId);
 
-        if (catalogItem == null || resolved.isEmpty() || resolved.get() == Items.AIR) {
-            fail(player, itemId, quantity, boxed, "materialism.shop.invalid");
+        if (!OPEN_SHOPS.contains(player.getUUID())) {
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.not_open");
+            return;
+        }
+
+        if (catalogItem == null
+                || resolved.isEmpty()
+                || resolved.get() == Items.AIR
+                || WorthData.get().baseValue(itemId.toString()) <= 0.0D) {
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.invalid");
             return;
         }
 
@@ -54,18 +85,18 @@ public final class ShopService {
         int maxQuantity = packable ? config.maxShulkerBoxes() * capacity : SHULKER_ROWS;
 
         if (quantity <= 0 || quantity > maxQuantity) {
-            fail(player, itemId, quantity, boxed, "materialism.shop.invalid_quantity");
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.invalid_quantity");
             return;
         }
 
         if (boxed && !packable) {
-            fail(player, itemId, quantity, boxed, "materialism.shop.not_packable");
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.not_packable");
             return;
         }
 
         int boxes = boxed ? (int) Math.ceil(quantity / (double) capacity) : 0;
         if (boxes > config.maxShulkerBoxes()) {
-            fail(player, itemId, quantity, boxed, "materialism.shop.invalid_quantity");
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.invalid_quantity");
             return;
         }
 
@@ -74,13 +105,13 @@ public final class ShopService {
         try {
             total = Math.addExact(Math.multiplyExact(unitPrice, quantity), Math.multiplyExact(config.shulkerBoxPriceUnits(), boxes));
         } catch (ArithmeticException exception) {
-            fail(player, itemId, quantity, boxed, "materialism.shop.invalid_quantity");
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.invalid_quantity");
             return;
         }
 
         EconomyStore economy = EconomyManager.get(player.level().getServer());
         if (!economy.spend(player.getUUID(), total)) {
-            fail(player, itemId, quantity, boxed, "materialism.shop.insufficient");
+            fail(player, requestId, itemId, quantity, boxed, "materialism.shop.insufficient");
             return;
         }
 
@@ -104,6 +135,7 @@ public final class ShopService {
         }
 
         ServerPlayNetworking.send(player, new PurchaseResultPayload(
+                requestId,
                 true,
                 balance,
                 itemId.toString(),
@@ -140,9 +172,17 @@ public final class ShopService {
         );
     }
 
-    private static void fail(ServerPlayer player, Identifier itemId, int quantity, boolean boxed, String key) {
+    private static void fail(
+            ServerPlayer player,
+            long requestId,
+            Identifier itemId,
+            int quantity,
+            boolean boxed,
+            String key
+    ) {
         player.sendSystemMessage(Component.translatable(key));
         ServerPlayNetworking.send(player, new PurchaseResultPayload(
+                requestId,
                 false,
                 EconomyManager.get(player.level().getServer()).get(player.getUUID()),
                 itemId.toString(),

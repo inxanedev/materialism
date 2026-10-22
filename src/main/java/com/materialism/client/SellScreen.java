@@ -261,7 +261,24 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
             return;
         }
 
-        this.requestSell();
+        if (this.sold || this.cancelled) {
+            if (this.minecraft.player != null) {
+                this.minecraft.player.closeContainer();
+            }
+            super.onClose();
+            return;
+        }
+
+        if (this.menu.hasItems()) {
+            if (this.minecraft.player != null) {
+                this.minecraft.player.sendOverlayMessage(
+                        Component.translatable("materialism.screen.close_blocked")
+                );
+            }
+            return;
+        }
+
+        this.sendCancel();
     }
 
     private void requestSell() {
@@ -284,12 +301,6 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
         this.sellButton.active = false;
         this.cancelButton.active = false;
         ClientPlayNetworking.send(SellPayload.INSTANCE);
-
-        // Closing the menu is the authoritative sale trigger on the server.
-        // This also guarantees the screen cannot get stuck if a custom payload is missed.
-        if (this.minecraft.player != null) {
-            this.minecraft.player.closeContainer();
-        }
     }
 
     private void sendCancel() {
@@ -299,6 +310,9 @@ public final class SellScreen extends AbstractContainerScreen<SellMenu> {
 
         this.cancelled = true;
         ClientPlayNetworking.send(CancelPayload.INSTANCE);
+        if (this.minecraft.player != null) {
+            this.minecraft.player.closeContainer();
+        }
     }
 
     private void updateButtonLabels() {

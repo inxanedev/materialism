@@ -31,9 +31,16 @@ public final class ShopNetworking {
                 BuyItemPayload.TYPE,
                 BuyItemPayload.CODEC
         );
+        PayloadTypeRegistry.serverboundPlay().register(
+                CloseShopPayload.TYPE,
+                CloseShopPayload.CODEC
+        );
 
         ServerLifecycleEvents.SERVER_STARTING.register(server ->
                 Money.setCurrencyFormat(ShopConfig.get().currencyFormat())
+        );
+        ServerLifecycleEvents.SERVER_STOPPING.register(server ->
+                ShopService.clearOpenShops()
         );
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -45,14 +52,21 @@ public final class ShopNetworking {
                 );
             }
         });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                ShopService.close(handler.player)
+        );
 
         ServerPlayNetworking.registerGlobalReceiver(BuyItemPayload.TYPE, (payload, context) ->
                 context.server().execute(() -> ShopService.buy(
                         context.player(),
                         payload.itemId(),
                         payload.quantity(),
-                        payload.boxed()
+                        payload.boxed(),
+                        payload.requestId()
                 ))
+        );
+        ServerPlayNetworking.registerGlobalReceiver(CloseShopPayload.TYPE, (payload, context) ->
+                context.server().execute(() -> ShopService.close(context.player()))
         );
     }
 }
